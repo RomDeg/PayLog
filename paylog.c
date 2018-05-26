@@ -22,7 +22,7 @@ int sumCost( double *productCostPerC, int *maxProductCost, int *sumProductCost )
     //Function logic
     maxProductCost[0] = 0;
     sumProductCost[0] = 0;
-    if ( ( logFile = fopen( "/home/rom/MyProjects/GTK/Pay.log", "r" ) ) == NULL ) {
+    if ( ( logFile = fopen( "/home/rom/Projects/PayLog/Pay.log", "r" ) ) == NULL ) {
         printf( "Erorr Open file\n" );
         return -1;
     }
@@ -95,6 +95,7 @@ int analiticCost( int sumProductCost, double *productCost, double *productCostPe
     productCostPerC[6] = (productCost[6] / sumProductCost) * 100;
     productCostPerC[7] = (productCost[7] / sumProductCost) * 100;
     productCostPerC[8] = (productCost[8] / sumProductCost) * 100;
+
     if (DEBUG) {
         printf( "%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
                                              productCost[0],
@@ -117,6 +118,7 @@ int analiticCost( int sumProductCost, double *productCost, double *productCostPe
                                              productCostPerC[7],
                                              productCostPerC[8] );
     }
+
     return 1;
 }
 
@@ -129,7 +131,7 @@ int analiticCost( int sumProductCost, double *productCost, double *productCostPe
 int leftDays(  ) {
     //Local variables
     time_t     currentTime;
-    char       buffer[100];
+    char       buffer[80];
     struct tm *timeStruct;
     int        month = 0;
     int        days = 0;

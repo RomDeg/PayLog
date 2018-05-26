@@ -5,7 +5,7 @@
 #define HEIGHT  480
 #define PTCOUNT 9
 #define RADIUS  100
-#define DEBUG   1
+#define DEBUG   0
 
 /*
 ====================

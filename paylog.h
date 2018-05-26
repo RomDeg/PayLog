@@ -1,7 +1,15 @@
 #ifndef PAYLOG_H
 #define PAYLOG_H
 
-#define DEBUG 1
+#define DEBUG 0
+
+/*
+====================
+Global variables
+
+====================
+*/
+
 
 /*
 ====================

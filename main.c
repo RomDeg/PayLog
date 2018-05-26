@@ -26,8 +26,17 @@ int main( int argc, char **argv ) {
     GtkWidget *addButton;
     GtkWidget *settingsButton;
     gpointer   addButtonP[3];
+    time_t     currentTime;
+    struct tm *timeStruct;
 
     //Function logic
+    //Get current time
+    currentTime = time( NULL );
+    timeStruct = localtime( &currentTime );
+    year = timeStruct->tm_year + 1900;
+    month = timeStruct->tm_mon + 1;
+    day = timeStruct->tm_mday;
+
     //Запуск GTK+
     gtk_init( &argc, &argv );
 
@@ -40,7 +49,7 @@ int main( int argc, char **argv ) {
     //Установка размеров
     gtk_window_set_default_size( GTK_WINDOW( window ), WIDTH, HEIGHT );
     //Запретить изменение размеров
-    //gtk_window_set_resizable( GTK_WINDOW( window ), FALSE );
+    gtk_window_set_resizable( GTK_WINDOW( window ), FALSE );
     //Когда пользователь закроет окно, то выйти из приложения, вызвать функцию gtk_main_quit()
     g_signal_connect( G_OBJECT( window ), "destroy", G_CALLBACK( gtk_main_quit ), NULL );
 
@@ -52,6 +61,7 @@ int main( int argc, char **argv ) {
     selectBox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 10 );
     buttonBox = gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 10 );
     productTypeCB = gtk_combo_box_text_new(  );
+    //productTypeCB = gtk_combo_box_new(  );
     gtk_combo_box_text_append( GTK_COMBO_BOX_TEXT( productTypeCB ), NULL, "Products" );
     gtk_combo_box_text_append( GTK_COMBO_BOX_TEXT( productTypeCB ), NULL, "Dining room" );
     gtk_combo_box_text_append( GTK_COMBO_BOX_TEXT( productTypeCB ), NULL, "Restaurant" );
@@ -63,10 +73,13 @@ int main( int argc, char **argv ) {
     gtk_combo_box_text_append( GTK_COMBO_BOX_TEXT( productTypeCB ), NULL, "Health" );
     productPayDateButton = gtk_button_new_with_label( "Change date" );
     productNameEntry = gtk_entry_new(  );
+    //gtk_entry_set_max_width_chars( GTK_ENTRY( productNameEntry ), 2048 );
     gtk_entry_set_placeholder_text( GTK_ENTRY( productNameEntry ), "Subject of purchase" );
     productCostEntry = gtk_entry_new(  );
+    gtk_entry_set_input_purpose( GTK_ENTRY( productCostEntry ), GTK_INPUT_PURPOSE_DIGITS );
     gtk_entry_set_placeholder_text( GTK_ENTRY( productCostEntry ), "Purchase price" );
     addButton = gtk_button_new_with_label( "Add" );
+    //gtk_toggle_button_set_active( addButton, TRUE );
     settingsButton = gtk_button_new_with_label( "Settings" );
 
     //Placing objects
@@ -107,7 +120,7 @@ int main( int argc, char **argv ) {
 ====================
 void productPayDateButtonAction( GtkButton *, gpointer )
 
-    
+    This function change the year, the month, the day to those that the user chose
 ====================
 */
 void productPayDateButtonAction( GtkButton *button, gpointer data ) {
@@ -138,9 +151,9 @@ void productPayDateButtonAction( GtkButton *button, gpointer data ) {
     gtk_dialog_run( GTK_DIALOG( dateDialog ) );
 
     gtk_calendar_get_date( GTK_CALENDAR( date ), &localTime.tm_year, &localTime.tm_mon, &localTime.tm_mday );
-    year = localTime.tm_year;
+    year  = localTime.tm_year;
     month = localTime.tm_mon + 1;
-    day = localTime.tm_mday;
+    day   = localTime.tm_mday;
 
     gtk_widget_destroy( dateDialog );
 }
@@ -149,6 +162,10 @@ void productPayDateButtonAction( GtkButton *button, gpointer data ) {
 ====================
 void addButtonAction( GtkButton *, gpointer )
 
+    This function retrieves data entered by the user from widgets
+    input: addButtonP[0] = productTypeCB;
+           addButtonP[1] = productNameEntry;
+           addButtonP[2] = productCostEntry;
 ====================
 */
 void addButtonAction( GtkButton *button, gpointer data ) {
@@ -168,10 +185,12 @@ void addButtonAction( GtkButton *button, gpointer data ) {
     strncpy( buffer, gtk_entry_get_text( GTK_ENTRY( productCostEntry ) ), 1024 );
     productCost = atoi( buffer );
     if ( productCost < 0 ) {
-        printf( "Warning productCost < 0" );
+        gtk_entry_set_text( GTK_ENTRY( productCostEntry ), "" );
+        gtk_entry_set_placeholder_text( GTK_ENTRY( productCostEntry ), "Wrong cost" );
+        return;
     }
-    gtk_entry_set_text( GTK_ENTRY( productNameEntry ), "" );
-    gtk_entry_set_text( GTK_ENTRY( productCostEntry ), "" );
+    gtk_entry_set_placeholder_text( GTK_ENTRY( productNameEntry ), "Subject of purchase" );
+    gtk_entry_set_placeholder_text( GTK_ENTRY( productCostEntry ), "Purchase price" );
 
     if ( !(writeToFile( year, month, day, productType, productName, productCost )) ) {
         printf( "Erorr Write to file\n" );
@@ -182,6 +201,7 @@ void addButtonAction( GtkButton *button, gpointer data ) {
 ====================
 int writeToFile( int, int, int, char *, char *, int );
 
+    
 ====================
 */
 int writeToFile( int year, int month, int day, char *productType, char *productName, int productCost ) {
@@ -189,7 +209,7 @@ int writeToFile( int year, int month, int day, char *productType, char *productN
     FILE *logFile;
 
     //Function logic
-    if ( ( logFile = fopen( "/home/rom/MyProjects/GTK/Pay.log", "a" ) ) == NULL ) {
+    if ( ( logFile = fopen( "/home/rom/Projects/PayLog/Pay.log", "a" ) ) == NULL ) {
         printf( "Erorr Open file\n" );
         return -1;
     }
@@ -232,56 +252,68 @@ gboolean graphBoxAreaAction( GtkWidget *widget, cairo_t *cr, gpointer data ) {
     double  productCostPerC[PTCOUNT];
     int     maxProductCost;
     int     sumProductCost;
-    char    lDays[256];
+    char    buffer[256];
 
     //Function logic
-
     width  = gtk_widget_get_allocated_width( widget );
     height = gtk_widget_get_allocated_height( widget );
     xc = (double)width / 2;
     yc = (double)height / 2;
     radius = RADIUS;
     sumCost( productCostPerC, &maxProductCost, &sumProductCost );
+    //Переводим проценты в углы
     angleDeg1[0] = 0;
     angleDeg2[0] = (360 / 100) * productCostPerC[0];
     for ( i = 1; i < PTCOUNT; i++ ) {
-        angleDeg1[i] = angleDeg1[i-1] + (360. / 100.) * productCostPerC[i];
+        angleDeg1[i] = angleDeg2[i-1];
         angleDeg2[i] = angleDeg2[i-1] + (360. / 100.) * productCostPerC[i];
     }
-    sprintf( lDays, "Days to the month's end: %d", leftDays(  ) );
+    if ( angleDeg2[PTCOUNT - 1] < 360 ) {
+        angleDeg2[PTCOUNT - 1] = 360;
+    }
+    sprintf( buffer, "Days to the month's end: %d", leftDays(  ) );
     cairo_set_font_size( cr, 20 );
     cairo_set_source_rgba( cr, 1, 1., 1., 1. );
     cairo_select_font_face( cr, "Times New Roman", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
     cairo_move_to( cr, 0, 20 );
-    cairo_show_text( cr, lDays );
-    sprintf( lDays, "Max cost pay: %d", maxProductCost );
+    cairo_show_text( cr, buffer );
+    sprintf( buffer, "Max cost pay: %d", maxProductCost );
     cairo_move_to( cr, 0, 50 );
-    cairo_show_text( cr, lDays );
-    sprintf( lDays, "Sum: %d", sumProductCost );
+    cairo_show_text( cr, buffer );
+    sprintf( buffer, "Sum: %d", sumProductCost );
     cairo_move_to( cr, 0, 80 );
-    cairo_show_text( cr, lDays );
+    cairo_show_text( cr, buffer );
     cairo_stroke( cr );
     //Draw
-    cairo_set_line_width( cr, 6.0 );
-    cairo_set_font_size( cr, 14 );
+    cairo_set_line_width( cr, 7.0 );
+    cairo_set_font_size( cr, 20 );
     cairo_select_font_face( cr, "Times New Roman", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
     for ( i = 0; i < PTCOUNT; i++ ) {
         angle1 = angleDeg1[i] * (G_PI / 180.0);
         angle2 = angleDeg2[i] * (G_PI / 180.0);
-        cairo_set_source_rgba( cr, R[i], G[i], B[i], 1. );
         cairo_arc( cr, xc, yc, radius, angle1, angle2 );
         cairo_get_current_point( cr, &x, &y );
-        if ( x > width/2 ) {
-            cairo_move_to( cr, x+10, y-10 );
-        } else {
-            cairo_move_to( cr, x-90, y );
-        }
-        cairo_show_text( cr, lDays );
+        cairo_set_source_rgba( cr, R[i], G[i], B[i], 1. );
+        cairo_fill( cr );
         cairo_stroke( cr );
-        cairo_arc( cr, xc, yc, radius, angle1, angle1 );
+
+        cairo_arc( cr, xc, yc, radius+1., angle1, angle1 );
         cairo_line_to( cr, xc, yc );
-        cairo_arc( cr, xc, yc, radius, angle2, angle2 );
+        cairo_arc( cr, xc, yc, radius+1., angle2, angle2 );
+        cairo_fill( cr );
         cairo_line_to( cr, xc, yc );
+        cairo_stroke( cr );
+
+        if ( x > width/2 ) {
+            cairo_arc( cr, xc, yc, radius + 20., angle1+(angle2-angle1)/2, angle1+(angle2-angle1)/2 );
+        } else if ( (x < width/2) && (y < height/2) ) {
+            cairo_arc( cr, xc, yc, radius + 50., angle1+(angle2-angle1)/2, angle1+(angle2-angle1)/2 );
+        } else {
+            cairo_arc( cr, xc, yc, radius + 40., angle1+(angle2-angle1)/2, angle1+(angle2-angle1)/2 );
+        }
+        cairo_set_source_rgba( cr, 1, 1., 1., 1. );
+        sprintf( buffer, "%0.f %%", productCostPerC[i] );
+        cairo_show_text( cr, buffer );
         cairo_stroke( cr );
     }
 
